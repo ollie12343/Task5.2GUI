@@ -1,53 +1,60 @@
 from tkinter import *
 import RPi.GPIO as GPIO
 
-root = Tk()
-root.title("Task 5.1P GUI")
-root.minsize(200, 200)
-
-LED = IntVar()
-
-
+# Constants
 RED = 8
 GREEN = 10
 BLUE = 12
 
 
+# Setup RPI
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(RED, GPIO.OUT)
 GPIO.setup(GREEN, GPIO.OUT)
 GPIO.setup(BLUE, GPIO.OUT)
 
-GPIO.output(RED, GPIO.LOW)
-GPIO.output(GREEN, GPIO.LOW)
-GPIO.output(BLUE, GPIO.LOW)
+redPin = GPIO.PWM(RED, 50)
+greenPin = GPIO.PWM(GREEN, 50)
+bluePin = GPIO.PWM(BLUE, 50)
 
 
-def clicked(LED):
-    if LED == RED:
-        GPIO.output(RED, GPIO.HIGH)
-        GPIO.output(GREEN, GPIO.LOW)
-        GPIO.output(BLUE, GPIO.LOW)
-        return
-    if LED == GREEN:
-        GPIO.output(RED, GPIO.LOW)
-        GPIO.output(GREEN, GPIO.HIGH)
-        GPIO.output(BLUE, GPIO.LOW)
-        return
-    if LED == BLUE:
-        GPIO.output(RED, GPIO.LOW)
-        GPIO.output(GREEN, GPIO.LOW)
-        GPIO.output(BLUE, GPIO.HIGH)
-        return
+# TKInter setup
+root = Tk()
+root.title("Task 5.2C GUI")
+root.geometry("225x225")
 
-# Radio Buttons - The values of the buttons correspond to the GPIO pin used
-Radiobutton(root, text="Red", variable=LED, value=RED, command=lambda: clicked(LED.get())).pack(anchor=W, padx=10, pady=(20, 10))
-Radiobutton(root, text="Green", variable=LED, value=GREEN, command=lambda: clicked(LED.get())).pack(anchor=W, padx=10)
-Radiobutton(root, text="Blue", variable=LED, value=BLUE, command=lambda: clicked(LED.get())).pack(anchor=W, padx=10, pady=(10, 20))
+redLabel = Label(root, text="Red", anchor=W).grid(column=0, row=0, padx=10, pady=(10, 0))
+redSlider = Scale(root, from_=0, to=100, orient=HORIZONTAL)
+redSlider.grid(column=1, row=0, padx=10, pady=10)
+greenLabel = Label(root, text="Green", anchor=W).grid(column=0, row=1, padx=10)
+greenSlider = Scale(root, from_=0, to=100, orient=HORIZONTAL)
+greenSlider.grid(column=1, row=1, padx=10)
+greenLabel = Label(root, text="Blue", anchor=W).grid(column=0, row=2, padx=10, pady=(0, 10))
+blueSlider = Scale(root, from_=0, to=100, orient=HORIZONTAL)
+blueSlider.grid(column=1, row=2, padx=10, pady=10)
 
-exit_button = Button(root, text="Exit!", command=root.destroy).pack()
+exit_button = Button(root, text="Exit!", command=root.destroy).grid(column=1, row=3, pady=(35, 10))
 
+
+def update():
+    try:
+        redPin.ChangeDutyCycle(redSlider.get())
+        greenPin.ChangeDutyCycle(greenSlider.get())
+        bluePin.ChangeDutyCycle(blueSlider.get())
+        root.after(10, update)
+    except AttributeError:
+        pass
+
+redPin.start(0)
+greenPin.start(0)
+bluePin.start(0)
+
+
+root.after(50, update)
 root.mainloop()
 
-GPIO.cleanup()
+redPin.stop()
+greenPin.stop()
+bluePin.stop()
 
+GPIO.cleanup()
